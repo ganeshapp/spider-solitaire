@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Zen Spider Solitaire</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♠</text></svg>" />
+  <script src="elements.cardmeister.full.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            felt: '#1a6b35',
+            'felt-dark': '#145a2b',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-felt h-[100dvh] flex flex-col overflow-hidden select-none">
+
+  <!-- Header -->
+  <header class="bg-felt-dark/80 backdrop-blur-sm border-b border-white/10 px-2 sm:px-3 py-1.5 sm:py-2 flex items-center justify-between z-50 flex-shrink-0">
+    <h1 class="text-white/90 font-semibold text-sm sm:text-lg tracking-wide whitespace-nowrap">
+      <span class="hidden sm:inline">Zen </span>Spider Solitaire
+    </h1>
+    <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-white/70">
+      <span id="stat-moves">Moves: 0</span>
+      <span class="text-white/30">|</span>
+      <span id="stat-completed">0/8</span>
+    </div>
+    <div class="flex items-center gap-1 sm:gap-1.5">
+      <button id="btn-stats" class="header-btn" title="Stats">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </button>
+      <button id="btn-hint" class="header-btn" title="Hint (H)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+      </button>
+      <button id="btn-undo" class="header-btn" title="Undo (Ctrl+Z)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v2M3 10l4-4m-4 4l4 4"/></svg>
+      </button>
+      <button id="btn-new" class="header-btn" title="New Game (N)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Foundation Bar: Stock + Completed (always visible) -->
+  <div id="foundation-bar" class="flex-shrink-0 flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 bg-black/15 border-b border-white/5">
+    <div id="completed-area" class="flex gap-1 sm:gap-1.5 items-center"></div>
+    <button id="stock-pile" class="stock-btn relative" title="Deal cards (D)">
+      <div class="stock-cards-visual"></div>
+      <span id="stock-count" class="absolute inset-0 flex items-center justify-center text-white font-bold text-[10px] sm:text-sm drop-shadow-md">50</span>
+    </button>
+  </div>
+
+  <!-- Tableau (scrollable area) -->
+  <main id="tableau-wrapper" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-1 sm:p-2">
+    <div id="tableau" class="grid grid-cols-10 gap-[2px] sm:gap-1.5"></div>
+  </main>
+
+  <!-- New Game Modal -->
+  <div id="modal-newgame" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold text-gray-800 mb-1">Spider Solitaire</h2>
+      <p class="text-sm text-gray-500 mb-5">Choose difficulty</p>
+      <div class="flex flex-col gap-2.5">
+        <button class="difficulty-btn" data-mode="1">
+          <span class="text-2xl text-gray-800">&#9824;</span>
+          <div>
+            <div class="font-semibold text-gray-800">1 Suit</div>
+            <div class="text-xs text-gray-500">Easy</div>
+          </div>
+        </button>
+        <button class="difficulty-btn" data-mode="2">
+          <span class="text-xl"><span class="text-gray-800">&#9824;</span> <span class="text-red-600">&#9829;</span></span>
+          <div>
+            <div class="font-semibold text-gray-800">2 Suits</div>
+            <div class="text-xs text-gray-500">Medium</div>
+          </div>
+        </button>
+        <button class="difficulty-btn" data-mode="4">
+          <span class="text-lg"><span class="text-gray-800">&#9824;</span> <span class="text-red-600">&#9829;</span> <span class="text-red-600">&#9830;</span> <span class="text-gray-800">&#9827;</span></span>
+          <div>
+            <div class="font-semibold text-gray-800">4 Suits</div>
+            <div class="text-xs text-gray-500">Hard</div>
+          </div>
+        </button>
+      </div>
+      <div class="mt-5 pt-4 border-t border-gray-200 text-xs text-gray-500 flex justify-around">
+        <span>Won: <strong id="modal-stats-won" class="text-gray-700">0</strong></span>
+        <span>Lost: <strong id="modal-stats-lost" class="text-gray-700">0</strong></span>
+        <span>Moves: <strong id="modal-stats-total" class="text-gray-700">0</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Modal -->
+  <div id="modal-stats" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800">Statistics</h2>
+        <button id="btn-stats-close" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="stat-card bg-green-50 border-green-200">
+          <div id="stat-detail-won" class="text-2xl font-bold text-green-700">0</div>
+          <div class="text-xs text-green-600">Games Won</div>
+        </div>
+        <div class="stat-card bg-red-50 border-red-200">
+          <div id="stat-detail-lost" class="text-2xl font-bold text-red-700">0</div>
+          <div class="text-xs text-red-600">Games Lost</div>
+        </div>
+        <div class="stat-card bg-blue-50 border-blue-200">
+          <div id="stat-detail-winpct" class="text-2xl font-bold text-blue-700">0%</div>
+          <div class="text-xs text-blue-600">Win Rate</div>
+        </div>
+        <div class="stat-card bg-purple-50 border-purple-200">
+          <div id="stat-detail-moves" class="text-2xl font-bold text-purple-700">0</div>
+          <div class="text-xs text-purple-600">Total Moves</div>
+        </div>
+      </div>
+      <div class="stat-card bg-amber-50 border-amber-200 mb-4">
+        <div id="stat-detail-best" class="text-2xl font-bold text-amber-700">--</div>
+        <div class="text-xs text-amber-600">Best Win (Fewest Moves)</div>
+      </div>
+      <button id="btn-stats-reset" class="w-full text-xs text-gray-400 hover:text-red-500 transition-colors py-1">
+        Reset Statistics
+      </button>
+    </div>
+  </div>
+
+  <!-- Win Modal -->
+  <div id="modal-win" class="modal-overlay hidden">
+    <div class="modal-content text-center">
+      <div class="text-5xl mb-3">&#127942;</div>
+      <h2 class="text-2xl font-bold text-gray-800 mb-1">You Win!</h2>
+      <p id="win-message" class="text-sm text-gray-500 mb-5">Congratulations!</p>
+      <button id="btn-win-new" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
+        New Game
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+  <!-- Drag Layer -->
+  <div id="drag-layer" class="fixed inset-0 z-[100] pointer-events-none hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
