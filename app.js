@@ -86,12 +86,192 @@
   }
 
   // ═══════════════════════════════════════════════════════════
+  //  WINNABLE DEAL GENERATOR
+  // ═══════════════════════════════════════════════════════════
+  function buildRandomDeal(mode) {
+    const deck = shuffle(createDeck(mode));
+    const columns = Array.from({ length: NUM_COLUMNS }, () => []);
+    let idx = 0;
+    for (let col = 0; col < NUM_COLUMNS; col++) {
+      const count = col < 4 ? 6 : 5;
+      for (let i = 0; i < count; i++) {
+        columns[col].push({ ...deck[idx], faceUp: i === count - 1 });
+        idx++;
+      }
+    }
+    return { columns, stock: deck.slice(idx).map(c => ({ ...c })) };
+  }
+
+  function generateWinnableDeal(mode) {
+    const maxAttempts = mode === 4 ? 25 : mode === 2 ? 50 : 80;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const deal = buildRandomDeal(mode);
+      if (checkWinnable(deal.columns, deal.stock)) return deal;
+    }
+    return buildRandomDeal(mode);
+  }
+
+  function checkWinnable(initCols, initStock) {
+    for (let trial = 0; trial < 3; trial++) {
+      const cols = initCols.map(c => c.map(x => ({ ...x })));
+      const stock = initStock.map(x => ({ ...x }));
+      if (greedySolve(cols, stock, trial > 0)) return true;
+    }
+    return false;
+  }
+
+  function greedySolve(cols, stock, useRandom) {
+    let completed = 0;
+    let stale = 0;
+
+    for (let step = 0; step < 1500; step++) {
+      if (completed >= SEQUENCES_TO_WIN) return true;
+
+      const moves = [];
+      for (let fc = 0; fc < NUM_COLUMNS; fc++) {
+        const col = cols[fc];
+        for (let ci = col.length - 1; ci >= 0; ci--) {
+          if (!col[ci].faceUp) break;
+          const seq = simGetSeq(cols, fc, ci);
+          if (!seq) continue;
+          for (let tc = 0; tc < NUM_COLUMNS; tc++) {
+            if (tc === fc) continue;
+            if (simCanPlace(seq, cols[tc])) {
+              moves.push({ fromCol: fc, cardIndex: ci, toCol: tc, cards: seq });
+            }
+          }
+        }
+      }
+
+      if (moves.length > 0) {
+        for (const m of moves) m._s = simScore(m, cols);
+        moves.sort((a, b) => b._s - a._s);
+
+        const pick = (useRandom && moves.length > 1 && Math.random() < 0.25)
+          ? Math.floor(Math.random() * Math.min(3, moves.length)) : 0;
+        const best = moves[pick];
+
+        const taken = cols[best.fromCol].splice(best.cardIndex);
+        cols[best.toCol].push(...taken);
+
+        const src = cols[best.fromCol];
+        let revealed = false;
+        if (src.length > 0 && !src[src.length - 1].faceUp) {
+          src[src.length - 1].faceUp = true;
+          revealed = true;
+        }
+
+        completed += simRemoveSeq(cols, best.toCol);
+        stale = revealed ? 0 : stale + 1;
+        if (stale > 150) return false;
+      } else if (stock.length >= NUM_COLUMNS) {
+        let canDeal = true;
+        for (let i = 0; i < NUM_COLUMNS; i++) {
+          if (cols[i].length === 0) { canDeal = false; break; }
+        }
+        if (!canDeal) return false;
+
+        for (let i = 0; i < NUM_COLUMNS; i++) {
+          const card = stock.pop();
+          card.faceUp = true;
+          cols[i].push(card);
+        }
+        for (let i = 0; i < NUM_COLUMNS; i++) completed += simRemoveSeq(cols, i);
+        stale = 0;
+      } else {
+        return false;
+      }
+    }
+    return completed >= SEQUENCES_TO_WIN;
+  }
+
+  function simGetSeq(cols, colIdx, cardIdx) {
+    const col = cols[colIdx];
+    if (!col[cardIdx] || !col[cardIdx].faceUp) return null;
+    const cards = [col[cardIdx]];
+    for (let i = cardIdx + 1; i < col.length; i++) {
+      const prev = col[i - 1], curr = col[i];
+      if (!curr.faceUp || curr.suit !== prev.suit || curr.rank !== prev.rank - 1) break;
+      cards.push(curr);
+    }
+    if (cardIdx + cards.length !== col.length) return null;
+    return cards;
+  }
+
+  function simCanPlace(seq, targetCol) {
+    if (targetCol.length === 0) return true;
+    return seq[0].rank === targetCol[targetCol.length - 1].rank - 1;
+  }
+
+  function simScore(move, cols) {
+    let score = 0;
+    const { fromCol, cardIndex, toCol, cards } = move;
+    const srcCol = cols[fromCol];
+    const dstCol = cols[toCol];
+
+    const combined = [...dstCol, ...cards];
+    if (combined.length >= 13) {
+      const b = combined.slice(combined.length - 13);
+      if (b[0].rank === 13) {
+        let ok = true;
+        for (let i = 0; i < 13; i++) {
+          if (b[i].rank !== 13 - i || b[i].suit !== b[0].suit) { ok = false; break; }
+        }
+        if (ok) score += 10000;
+      }
+    }
+
+    if (cardIndex > 0 && !srcCol[cardIndex - 1].faceUp) score += 500;
+    if (cardIndex === 0) score += 200;
+
+    if (dstCol.length === 0) {
+      score -= 50;
+      if (cards[0].rank === 13) score += 50;
+    }
+
+    if (dstCol.length > 0) {
+      const top = dstCol[dstCol.length - 1];
+      if (top.suit === cards[0].suit) {
+        score += 300;
+        let run = 1;
+        for (let i = dstCol.length - 2; i >= 0; i--) {
+          if (dstCol[i].faceUp && dstCol[i].suit === top.suit &&
+              dstCol[i].rank === dstCol[i + 1].rank + 1) run++;
+          else break;
+        }
+        score += run * 20;
+      }
+    }
+
+    score += cards.length * 10;
+    return score;
+  }
+
+  function simRemoveSeq(cols, colIdx) {
+    const col = cols[colIdx];
+    if (col.length < 13) return 0;
+    const b = col.slice(col.length - 13);
+    if (b[0].rank !== 13) return 0;
+    const suit = b[0].suit;
+    for (let i = 0; i < 13; i++) {
+      if (b[i].rank !== 13 - i || b[i].suit !== suit || !b[i].faceUp) return 0;
+    }
+    col.splice(col.length - 13, 13);
+    if (col.length > 0 && !col[col.length - 1].faceUp) {
+      col[col.length - 1].faceUp = true;
+    }
+    return 1;
+  }
+
+  // ═══════════════════════════════════════════════════════════
   //  GAME SETUP
   // ═══════════════════════════════════════════════════════════
   function newGame(mode) {
+    const deal = generateWinnableDeal(mode);
+
     state = {
-      columns: Array.from({ length: NUM_COLUMNS }, () => []),
-      stock: [],
+      columns: deal.columns,
+      stock: deal.stock,
       completed: 0,
       completedSuits: [],
       moves: 0,
@@ -99,20 +279,6 @@
       mode,
       gameOver: false,
     };
-
-    const deck = shuffle(createDeck(mode));
-    let idx = 0;
-
-    for (let col = 0; col < NUM_COLUMNS; col++) {
-      const count = col < 4 ? 6 : 5;
-      for (let i = 0; i < count; i++) {
-        const card = deck[idx++];
-        card.faceUp = i === count - 1;
-        state.columns[col].push(card);
-      }
-    }
-
-    state.stock = deck.slice(idx);
 
     clearHint();
     render();
