@@ -34,6 +34,9 @@
       <span id="stat-completed">0/8</span>
     </div>
     <div class="flex items-center gap-1 sm:gap-1.5">
+      <button id="btn-info" class="header-btn" title="How to Play">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </button>
       <button id="btn-stats" class="header-btn" title="Stats">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       </button>
@@ -145,6 +148,71 @@
       <button id="btn-win-new" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
         New Game
       </button>
+    </div>
+  </div>
+
+  <!-- Info / How to Play Modal -->
+  <div id="modal-info" class="modal-overlay hidden">
+    <div class="modal-content max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800">How to Play</h2>
+        <button id="btn-info-close" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-sm text-gray-600">
+        <div>
+          <h3 class="font-semibold text-gray-800 mb-1">Goal</h3>
+          <p>Build 8 complete sequences of King down to Ace of the <strong>same suit</strong>. Completed sequences are automatically removed from the tableau.</p>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-800 mb-1">Rules</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Stack cards in <strong>descending order</strong> (e.g. 7 on 8) regardless of suit.</li>
+            <li>Only <strong>same-suit</strong> descending sequences can be moved as a group.</li>
+            <li>Any card or valid group can be placed on an empty column.</li>
+            <li>Deal 10 new cards from the stock pile (one per column) when stuck &mdash; all columns must be non-empty to deal.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-800 mb-1">Difficulty</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>1 Suit</strong> &mdash; Easy. All spades.</li>
+            <li><strong>2 Suits</strong> &mdash; Medium. Spades &amp; hearts.</li>
+            <li><strong>4 Suits</strong> &mdash; Hard. All four suits.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-800 mb-1">Tips</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>Prioritize uncovering face-down cards.</li>
+            <li>Try to keep empty columns available &mdash; they act as free space.</li>
+            <li>Build same-suit sequences whenever possible.</li>
+            <li>Use the <strong>Hint</strong> button when stuck.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-800 mb-1">Controls</h3>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+            <span class="text-gray-500">Click a card</span><span>Smart auto-move</span>
+            <span class="text-gray-500">Drag a card/group</span><span>Move to any column</span>
+            <span class="text-gray-500">H</span><span>Show hint</span>
+            <span class="text-gray-500">D</span><span>Deal from stock</span>
+            <span class="text-gray-500">Ctrl/Cmd + Z</span><span>Undo</span>
+            <span class="text-gray-500">N</span><span>New game</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
+        <p class="mb-1">Zen Spider Solitaire</p>
+        <p>Made by <a href="https://gapp.in" target="_blank" rel="noopener noreferrer" class="text-green-600 hover:text-green-700 underline underline-offset-2">gapp.in</a></p>
+      </div>
     </div>
   </div>
 

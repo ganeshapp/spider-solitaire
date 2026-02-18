@@ -49,6 +49,7 @@
   const $modalNewGame = document.getElementById('modal-newgame');
   const $modalWin = document.getElementById('modal-win');
   const $modalStats = document.getElementById('modal-stats');
+  const $modalInfo = document.getElementById('modal-info');
   const $winMessage = document.getElementById('win-message');
   const $dragLayer = document.getElementById('drag-layer');
   const $toastContainer = document.getElementById('toast-container');
@@ -1000,6 +1001,14 @@
     $modalStats.classList.add('hidden');
   }
 
+  function showInfoModal() {
+    $modalInfo.classList.remove('hidden');
+  }
+
+  function hideInfoModal() {
+    $modalInfo.classList.add('hidden');
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  EVENT HANDLERS
   // ═══════════════════════════════════════════════════════════
@@ -1016,6 +1025,8 @@
     document.getElementById('btn-hint').addEventListener('click', showHint);
     document.getElementById('btn-undo').addEventListener('click', undo);
     document.getElementById('btn-new').addEventListener('click', showNewGameModal);
+    document.getElementById('btn-info').addEventListener('click', showInfoModal);
+    document.getElementById('btn-info-close').addEventListener('click', hideInfoModal);
     document.getElementById('btn-stats').addEventListener('click', showStatsModal);
     document.getElementById('btn-stats-close').addEventListener('click', hideStatsModal);
     document.getElementById('btn-stats-reset').addEventListener('click', () => {
@@ -1044,7 +1055,8 @@
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const anyModalOpen = !$modalNewGame.classList.contains('hidden') ||
                            !$modalWin.classList.contains('hidden') ||
-                           !$modalStats.classList.contains('hidden');
+                           !$modalStats.classList.contains('hidden') ||
+                           !$modalInfo.classList.contains('hidden');
       if (anyModalOpen) return;
       switch (e.key.toLowerCase()) {
         case 'z': if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo(); } break;
