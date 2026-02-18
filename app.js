@@ -32,7 +32,23 @@
     gameOver: false,
   };
 
-  let stats = { totalMoves: 0, gamesWon: 0, gamesLost: 0, bestWin: null };
+  const MODE_LABELS = { 1: '1 Suit', 2: '2 Suits', 4: '4 Suits' };
+
+  function emptyModeStats() {
+    return { gamesWon: 0, gamesLost: 0, bestWin: null };
+  }
+
+  function defaultStats() {
+    return {
+      totalMoves: 0,
+      gamesWon: 0,
+      gamesLost: 0,
+      bestWin: null,
+      byMode: { 1: emptyModeStats(), 2: emptyModeStats(), 4: emptyModeStats() },
+    };
+  }
+
+  let stats = defaultStats();
   let dragState = null;
   let hintTimeout = null;
   let animating = false;
@@ -574,6 +590,15 @@
     if (stats.bestWin === null || state.moves < stats.bestWin) {
       stats.bestWin = state.moves;
     }
+
+    const ms = stats.byMode[state.mode];
+    if (ms) {
+      ms.gamesWon++;
+      if (ms.bestWin === null || state.moves < ms.bestWin) {
+        ms.bestWin = state.moves;
+      }
+    }
+
     saveStats();
     saveGameState();
 
@@ -587,6 +612,8 @@
     if (moves.length === 0 && state.stock.length === 0) {
       state.gameOver = true;
       stats.gamesLost++;
+      const ms = stats.byMode[state.mode];
+      if (ms) ms.gamesLost++;
       saveStats();
       saveGameState();
       toast('No more moves \u2014 Game Over!');
@@ -955,6 +982,17 @@
         stats.gamesWon = saved.gamesWon || 0;
         stats.gamesLost = saved.gamesLost || 0;
         stats.bestWin = saved.bestWin || null;
+        if (saved.byMode) {
+          for (const m of [1, 2, 4]) {
+            if (saved.byMode[m]) {
+              stats.byMode[m] = {
+                gamesWon: saved.byMode[m].gamesWon || 0,
+                gamesLost: saved.byMode[m].gamesLost || 0,
+                bestWin: saved.byMode[m].bestWin ?? null,
+              };
+            }
+          }
+        }
       }
     } catch (e) { /* ignore */ }
   }
@@ -992,7 +1030,16 @@
     document.getElementById('stat-detail-lost').textContent = stats.gamesLost;
     document.getElementById('stat-detail-winpct').textContent = winPct + '%';
     document.getElementById('stat-detail-moves').textContent = stats.totalMoves;
-    document.getElementById('stat-detail-best').textContent = stats.bestWin !== null ? stats.bestWin : '--';
+
+    for (const m of [1, 2, 4]) {
+      const ms = stats.byMode[m];
+      const best = ms.bestWin !== null ? ms.bestWin : '--';
+      const mTotal = ms.gamesWon + ms.gamesLost;
+      const mWinPct = mTotal > 0 ? Math.round((ms.gamesWon / mTotal) * 100) + '%' : '--';
+      document.getElementById(`stat-mode-${m}-best`).textContent = best;
+      document.getElementById(`stat-mode-${m}-won`).textContent = ms.gamesWon;
+      document.getElementById(`stat-mode-${m}-winpct`).textContent = mWinPct;
+    }
 
     $modalStats.classList.remove('hidden');
   }
@@ -1031,7 +1078,7 @@
     document.getElementById('btn-stats-close').addEventListener('click', hideStatsModal);
     document.getElementById('btn-stats-reset').addEventListener('click', () => {
       if (confirm('Reset all statistics?')) {
-        stats = { totalMoves: 0, gamesWon: 0, gamesLost: 0, bestWin: null };
+        stats = defaultStats();
         saveStats();
         showStatsModal();
       }

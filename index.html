@@ -129,9 +129,42 @@
           <div class="text-xs text-purple-600">Total Moves</div>
         </div>
       </div>
-      <div class="stat-card bg-amber-50 border-amber-200 mb-4">
-        <div id="stat-detail-best" class="text-2xl font-bold text-amber-700">--</div>
-        <div class="text-xs text-amber-600">Best Win (Fewest Moves)</div>
+
+      <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">By Difficulty</h3>
+      <div class="space-y-2 mb-4">
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 border border-gray-200">
+          <div class="flex items-center gap-2">
+            <span class="text-base text-gray-800">&#9824;</span>
+            <span class="text-sm font-medium text-gray-700">1 Suit</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            <span>Won: <strong id="stat-mode-1-won" class="text-gray-700">0</strong></span>
+            <span>Win: <strong id="stat-mode-1-winpct" class="text-gray-700">--</strong></span>
+            <span>Best: <strong id="stat-mode-1-best" class="text-amber-600">--</strong></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 border border-gray-200">
+          <div class="flex items-center gap-2">
+            <span class="text-sm"><span class="text-gray-800">&#9824;</span><span class="text-red-600">&#9829;</span></span>
+            <span class="text-sm font-medium text-gray-700">2 Suits</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            <span>Won: <strong id="stat-mode-2-won" class="text-gray-700">0</strong></span>
+            <span>Win: <strong id="stat-mode-2-winpct" class="text-gray-700">--</strong></span>
+            <span>Best: <strong id="stat-mode-2-best" class="text-amber-600">--</strong></span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-2.5 rounded-lg bg-gray-50 border border-gray-200">
+          <div class="flex items-center gap-2">
+            <span class="text-xs"><span class="text-gray-800">&#9824;</span><span class="text-red-600">&#9829;</span><span class="text-red-600">&#9830;</span><span class="text-gray-800">&#9827;</span></span>
+            <span class="text-sm font-medium text-gray-700">4 Suits</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-gray-500">
+            <span>Won: <strong id="stat-mode-4-won" class="text-gray-700">0</strong></span>
+            <span>Win: <strong id="stat-mode-4-winpct" class="text-gray-700">--</strong></span>
+            <span>Best: <strong id="stat-mode-4-best" class="text-amber-600">--</strong></span>
+          </div>
+        </div>
       </div>
       <button id="btn-stats-reset" class="w-full text-xs text-gray-400 hover:text-red-500 transition-colors py-1">
         Reset Statistics
